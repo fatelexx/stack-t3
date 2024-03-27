@@ -1,7 +1,7 @@
 import { generateYAxis } from '../../lib/utils';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '../fonts';
-import { fetchRevenue } from '../../lib/data';
+import { api } from '~/trpc/server';
 
 // This component is representational only.
 // For data visualization UI, check out:
@@ -11,7 +11,7 @@ import { fetchRevenue } from '../../lib/data';
 
 export default async function RevenueChart() {
   const chartHeight = 350;
-  const revenue = await fetchRevenue();
+  const revenue = await api.dashboard.fetchRevenue.query();
 
   const { yAxisLabels, topLabel } = generateYAxis(revenue);
 
@@ -27,9 +27,9 @@ export default async function RevenueChart() {
       {/* NOTE: comment in this code when you get to this point in the course */}
 
       <div className="rounded-xl bg-gray-50 p-4">
-        <div className="sm:grid-cols-13 mt-0 grid grid-cols-12 items-end gap-2 rounded-md bg-white p-4 md:gap-4">
+        <div className="grid grid-cols-12 mt-0 items-end gap-2 rounded-md bg-white p-4 md:gap-4">
           <div
-            className="mb-6 hidden flex-col justify-between text-sm text-gray-400 sm:flex"
+            className="mb-6 hidden flex-col justify-between text-sm text-gray-400"
             style={{ height: `${chartHeight}px` }}
           >
             {yAxisLabels.map((label) => (

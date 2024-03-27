@@ -5,7 +5,7 @@ import {
   InboxIcon,
 } from '@heroicons/react/24/outline';
 import { lusitana } from '../fonts';
-import { fetchCardData } from '../../lib/data';
+import { api } from '~/trpc/server';
 
 const iconMap = {
   collected: BanknotesIcon,
@@ -15,12 +15,7 @@ const iconMap = {
 };
 
 export default async function CardWrapper() {
-  const {
-    numberOfInvoices,
-    numberOfCustomers,
-    totalPaidInvoices,
-    totalPendingInvoices,
-  } = await fetchCardData();
+  const { numberOfCustomers, numberOfInvoices, totalPaidInvoices, totalPendingInvoices } = await api.dashboard.fetchCardData.query();
   return (
     <>
       {/* NOTE: comment in this code when you get to this point in the course */}
