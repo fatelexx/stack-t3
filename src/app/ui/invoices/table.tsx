@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { UpdateInvoice, DeleteInvoice } from '../invoices/buttons';
 import InvoiceStatus from '../invoices/status';
 import { formatDateToLocal, formatCurrency } from '../../lib/utils';
-import { fetchFilteredInvoices } from '../../lib/data';
+import { api } from '~/trpc/server';
 
 export default async function InvoicesTable({
   query,
@@ -11,7 +11,7 @@ export default async function InvoicesTable({
   query: string;
   currentPage: number;
 }) {
-  const invoices = await fetchFilteredInvoices(query, currentPage);
+  const invoices = await api.invoice.fetchFilteredInvoices.query({query, currentPage});
 
   return (
     <div className="mt-6 flow-root">
