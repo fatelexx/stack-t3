@@ -61,5 +61,12 @@ export const invoiceRouter = createTRPCRouter({
     });
     const totalPages = Math.ceil(Number(count) / ITEMS_PER_PAGE);
     return totalPages;
+  }),
+  deleteInvoice: publicProcedure.input(z.string()).mutation(async ({ctx, input}) => {
+    const deleted = await ctx.db.invoices.delete({where: {id: input}});
+    if (deleted) {
+      return { message: 'Deleted Invoice.' };
+    }
+    return { message: 'Database Error: Failed to Delete Invoice.' };
   })
 });
