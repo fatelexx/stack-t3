@@ -1,6 +1,6 @@
 'use client';
 
-import { CustomerField } from '../../lib/definitions';
+import { type CustomerField } from '../../lib/definitions';
 import Link from 'next/link';
 import {
   CheckIcon,
@@ -9,15 +9,32 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '../button';
-import { createInvoice } from '../../lib/actions';
-import { useFormState } from 'react-dom';
+import { type FormEvent } from 'react';
+import { api } from '~/trpc/react';
+import { useRouter } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
-  const initialState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(createInvoice, initialState);
+  const router = useRouter();
+  const create = api.invoice.createInvoice.useMutation({
+    onSuccess: () => {
+      revalidatePath('/dashboard/invoices');
+      router.push('/dashboard/invoices');
+    }
+  });
+
+  const submit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    create.mutate({
+      amount: +(formData.get('amount') ?? 0),
+      customerId: (formData.get('customerId')?.toString() ?? ''),
+      status: formData.get('status')?.toString() == 'paid' ? 'paid' : 'pending'
+    })
+  };
 
   return (
-    <form action={dispatch}>
+    <form onSubmit={submit}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
@@ -44,12 +61,12 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
           <div id="customer-error" aria-live="polite" aria-atomic="true">
-            {state.errors?.customerId &&
+            {/* {state.errors?.customerId &&
               state.errors.customerId.map((error: string) => (
                 <p className="mt-2 text-sm text-red-500" key={error}>
                   {error}
                 </p>
-              ))}
+              ))} */}
           </div>
         </div>
 

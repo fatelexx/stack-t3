@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import { z } from "zod";
-import { type InvoicesTable } from "~/app/lib/definitions";
+import { type CustomerField, type InvoicesTable } from "~/app/lib/definitions";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 const ITEMS_PER_PAGE = 6;
@@ -68,5 +68,38 @@ export const invoiceRouter = createTRPCRouter({
       return { message: 'Deleted Invoice.' };
     }
     return { message: 'Database Error: Failed to Delete Invoice.' };
-  })
+  }),
+  fetchCustomers: publicProcedure.query(async ({ ctx }) => {
+    const customers: CustomerField[] = await ctx.db.customers.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+    return customers;
+  }),
+  createInvoice: publicProcedure.input(z.object({
+    customerId: z.string(),
+    amount: z.number(),
+    status: z.enum(['pending', 'paid'])
+  })).mutation(async ({ ctx, input: { amount, customerId, status } }) => {
+    const amountInCents = amount * 100;
+    const date = new Date().toISOString();
+
+    await ctx.db.invoices.create({
+      data: {
+        customers: {
+          connect: {
+            id: customerId
+          }
+        },
+        amount: amountInCents,
+        status,
+        date
+      }
+    });
+  }),
 });
