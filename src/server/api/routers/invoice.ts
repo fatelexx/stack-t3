@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import { z } from "zod";
-import { type CustomerField, type InvoicesTable } from "~/app/lib/definitions";
+import { type InvoiceForm, type CustomerField, type InvoicesTable } from "~/app/lib/definitions";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 const ITEMS_PER_PAGE = 6;
@@ -62,6 +62,20 @@ export const invoiceRouter = createTRPCRouter({
     const totalPages = Math.ceil(Number(count) / ITEMS_PER_PAGE);
     return totalPages;
   }),
+  fetchInvoiceById: publicProcedure.input(z.string()).query(async ({ctx, input}) => {
+    const invoice = await ctx.db.invoices.findUniqueOrThrow({
+      where: {id: input},
+      select: {
+        id: true,
+        amount: true,
+        status: true,
+        customer_id: true
+      }
+    });
+
+    const result: InvoiceForm = {...invoice, amount: invoice.amount / 100, status: invoice.status as 'paid' | 'pending'};
+    return result;
+  }),
   deleteInvoice: publicProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
     const deleted = await ctx.db.invoices.delete({ where: { id: input } });
     if (deleted) {
@@ -101,5 +115,24 @@ export const invoiceRouter = createTRPCRouter({
         date
       }
     });
+  }),
+  updateInvoice: publicProcedure.input(z.object({
+    id: z.string(),
+    customerId: z.string(),
+    amount: z.number(),
+    status: z.enum(['pending', 'paid'])
+  })).mutation(async ({ ctx, input: { amount, customerId, status, id } }) => {
+    const amountInCents = amount * 100;
+
+    await ctx.db.invoices.updateMany({
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status
+      },
+      where: {
+        id
+      }
+    })
   }),
 });

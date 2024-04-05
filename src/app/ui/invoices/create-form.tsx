@@ -12,13 +12,13 @@ import { Button } from '../button';
 import { type FormEvent } from 'react';
 import { api } from '~/trpc/react';
 import { useRouter } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+// import { revalidatePath } from 'next/cache';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
   const router = useRouter();
   const create = api.invoice.createInvoice.useMutation({
     onSuccess: () => {
-      revalidatePath('/dashboard/invoices');
+      // revalidatePath('/dashboard/invoices');
       router.push('/dashboard/invoices');
     }
   });

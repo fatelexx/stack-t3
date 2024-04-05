@@ -8,8 +8,11 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { Button } from '../../ui/button';
-import { updateInvoice } from '../../lib/actions';
-import { useFormState } from 'react-dom';
+import { type CustomerField, type InvoiceForm } from '~/app/lib/definitions';
+import { useRouter } from 'next/navigation';
+import { api } from '~/trpc/react';
+// import { revalidatePath } from 'next/cache';
+import { type FormEvent } from 'react';
 
 export default function EditInvoiceForm({
   invoice,
@@ -18,12 +21,27 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
-  const initialState = { message: null, errors: {} };
-  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
-  const [state, dispatch] = useFormState(updateInvoiceWithId, initialState);
+  const router = useRouter();
+  const update = api.invoice.updateInvoice.useMutation({
+    onSuccess: () => {
+      // revalidatePath('/dashboard/invoices');
+      router.push('/dashboard/invoices');
+    }
+  });
+
+  const submit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    update.mutate({
+      amount: +(formData.get('amount') ?? 0),
+      customerId: (formData.get('customerId')?.toString() ?? ''),
+      status: formData.get('status')?.toString() == 'paid' ? 'paid' : 'pending',
+      id: invoice.id
+    })
+  };
 
   return (
-    <form action={dispatch}>
+    <form onSubmit={submit}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
