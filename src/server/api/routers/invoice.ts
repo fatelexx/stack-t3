@@ -16,13 +16,13 @@ export const invoiceRouter = createTRPCRouter({
 
     const invoices = await ctx.db.invoices
       .findMany({
-        // where: {
-        //     OR: [
-        //         {customers: {name: {contains: query}}},
-        //         {customers: {email: {contains: query}}},
-        //         // {amount: {}}
-        //     ]
-        // },
+        where: {
+            OR: [
+                {customers: {name: {contains: query}}},
+                {customers: {email: {contains: query}}},
+                // {amount: {}}
+            ]
+        },
         select: {
           id: true,
           amount: true,
@@ -58,6 +58,13 @@ export const invoiceRouter = createTRPCRouter({
   fetchInvoicesPages: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
     const count = await ctx.db.invoices.count({
       // where
+      where: {
+        OR: [
+          {customers: {name: {contains: input}}},
+          {customers: {email: {contains: input}}},
+          // {amount: {}}
+      ]
+      }
     });
     const totalPages = Math.ceil(Number(count) / ITEMS_PER_PAGE);
     return totalPages;
